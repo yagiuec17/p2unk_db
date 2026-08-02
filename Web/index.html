@@ -1,0 +1,1972 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <title>p2unk_db</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#E6F3FF">
+
+    <img loading="lazy">
+    <style>
+        *{
+            max-width:100%;
+            box-sizing:border-box;
+        }
+
+        body{
+            margin:0;
+            font-family:-apple-system;
+            background:#f2f2f7;
+            margin:0;
+            padding:0;
+            overflow-x:hidden;
+            touch-action: pan-y;
+            overscroll-behavior: none;
+            padding-bottom: calc(80px + env(safe-area-inset-bottom));
+        }
+        
+        .hidden{
+            display:none !important;
+        }
+
+        .deck{
+            display:flex;
+            align-items:stretch;
+            width:100%;
+            padding:10px;
+            background:#fff;
+            border-radius:10px;
+            margin-bottom:10px;
+            gap:10px;
+        }
+
+        .deckLeader{
+            width:70px;
+            height:98px;
+            object-fit:cover;
+            border-radius:6px;
+            flex-shrink:0;
+        }
+        
+        .deckRight{
+            flex:1;
+            display:flex;
+            flex-direction:column;
+            justify-content:space-between;
+        }
+
+        .deckName{
+            font-size:16px;
+            font-weight:bold;
+            text-align:right;
+        }
+
+        .deckButtons{
+            display:flex;
+            justify-content:flex-end;
+            gap:6px;
+        }
+
+        .deckButtons button{
+            padding:6px 10px;
+            font-size:12px;
+            border:none;
+            border-radius:6px;
+            background:#007aff;
+            color:#fff;
+        }
+
+        .deckButtons .danger{
+            background:#e74c3c;
+        }
+
+        #list{
+            display:flex;
+            flex-direction:column;
+            gap:10px;
+        }
+
+        .grid{
+            display:grid;
+            gap:4px;
+            padding:4px;
+            box-sizing:border-box;
+            padding-bottom: calc(80px + env(safe-area-inset-bottom));
+        }
+
+
+        .cardListGrid{
+            display:grid;
+            gap:4px;
+            padding:4px;
+            box-sizing:border-box;
+            padding-bottom: calc(80px + env(safe-area-inset-bottom));
+        }
+
+        .card img{
+            width:100%;
+            aspect-ratio: 120 / 168;
+            object-fit:cover;
+            position:relative;
+            z-index:1;
+            image-rendering:auto;
+        }
+
+        .card::before{
+            content:"";
+            position:absolute;
+            inset:0;
+            border-left:2px solid var(--c1);
+            border-right:2px solid var(--c2,var(--c1));
+            border-top:2px solid var(--c1);
+            border-bottom:2px solid var(--c2,var(--c1));
+            border-radius:8px;
+            pointer-events:none;
+        }
+
+        .card > *{
+            position:relative;
+        }
+
+        .card{
+            position:relative;
+            width:100%;
+            aspect-ratio: 120/168;
+            touch-action: pan-y;
+        }
+
+        #edit{
+            display:flex;
+            flex-direction:column;
+            height:100vh;
+        }
+
+        .selectedWrap{
+            display:block;
+            overflow:visible;
+            background:#e5dccb;
+        }
+
+        .selectedScroll{
+            display:grid;
+            grid-template-columns:repeat(7, 1fr);
+            padding:8px;
+        }
+
+        .selectedScroll .card{
+            width:100%;
+            aspect-ratio:120/168;
+        }
+
+        .selectedWrap .card{
+            width:100%;
+            aspect-ratio:120/168;
+        }
+
+        .selectedWrap::-webkit-scrollbar{
+            height:10px;
+        }
+        
+        .selectedWrap::-webkit-scrollbar-thumb{
+            background:#ccc;
+            border-radius:3px;
+        }
+        
+        #leaderFixed{
+            position:relative;
+            width:100%;
+            height:90px;
+            overflow:hidden;
+            border-radius:10px;
+        }
+
+        #leaderFixed img{
+            width:100%;
+            height:100%;
+            object-fit:cover;
+            object-position:center 96%;
+        }
+
+        #leaderFixed span{
+            position:absolute;
+            bottom:6px;
+            left:10px;
+            color:#fff;
+            font-weight:bold;
+        }
+
+        .listArea{
+            flex:1;
+            padding: 0 2px 80px;
+            box-sizing: border-box;
+            overflow:auto;
+            padding-bottom: calc(80px + env(safe-area-inset-bottom));
+        }
+
+        .footer{
+            position:fixed;
+            bottom:0;
+            left:0;
+            width:100%;
+            height:80px;
+            display:flex;
+            gap:6px;
+            padding:6px;
+            background:#fff;
+            z-index:10;
+            padding-bottom: calc(8px + env(safe-area-inset-bottom));
+        }
+        
+        .footer button{
+            flex:1;
+            min-height:44px;
+            padding:10px;
+            font-size:14px;
+            border:none;
+            border-radius:10px;
+            background:#007aff;
+            color:#fff;
+        }
+        
+        #popup{
+            position:fixed;
+            bottom:-100%;
+            width:100%;
+            height:65%;
+            background:#fff;
+            border-radius:20px 20px 0 0;
+            transition:.3s;
+            padding:10px;
+            overflow:auto;
+            z-index:10;
+        }
+
+        #popup.show{
+            bottom:0;
+        }
+        
+        #popup_list{
+            position:fixed;
+            bottom:-100%;
+            width:100%;
+            height:65%;
+            background:#fff;
+            border-radius:20px 20px 0 0;
+            transition:.3s;
+            padding:10px;
+            overflow:auto;
+            z-index:10;
+        }
+
+        #popup_list.show{
+            bottom:0;
+        }
+
+        #viewer{
+            position:fixed;
+            inset:0;
+            background:#0008;
+            display:none;
+            align-items:center;
+            justify-content:center;
+            opacity:0;
+            pointer-events:none;
+            transition:.2s;
+            z-index:9;
+        }
+
+        #viewer.show{
+            opacity:1;
+            pointer-events:auto;
+            display:flex;
+        }
+
+        #viewerContent{
+            transform:scale(0.8);
+            transition:.2s;
+            transform:none;
+        }
+
+        #viewer.show #viewerContent{
+            transform:scale(1);
+        }
+
+        #viewer .card{
+            width:70vw;
+            max-width:320px;
+            height:auto;
+            aspect-ratio:120/168;
+        }
+        
+        .viewerWrap{
+            position:relative;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+        }
+
+        .navBtn{
+            min-height:44px;
+            position:absolute;
+            top:50%;
+            transform:translateY(-50%);
+            font-size:34px;
+            background:#000a;
+            color:#fff;
+            border:none;
+            width:40px;
+            border-radius:50%;
+        }
+
+        .prev{
+            left:-60px;
+        }
+        
+        .next{
+            right:-60px;
+        }
+
+        .closeBtn{
+            position:absolute;
+            top:-60px;
+            right:0;
+            background:#000a;
+            color:#ff0000;
+            border:none;
+            width:60px;
+            min-height:60px;
+            border-radius:50%;
+            font-size:34px;
+        }
+
+        input{
+            width:100%;
+            padding:6px;
+            margin-bottom:10px;
+            border-radius:6px;
+            border:1px solid #ccc;
+        }
+
+        .addBtn{
+            position:absolute;
+            width:54px;
+            height:54px;
+            font-size:34px;
+            border:none;
+            border-radius:50%;
+            color:#fff;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            bottom:4px;
+            right:4px;
+            background:#28a745;
+            z-index:2;
+        }
+
+        .removeBtn{
+            position:absolute;
+            width:54px;
+            height:54px;
+            font-size:34px;
+            border:none;
+            border-radius:50%;
+            color:#fff;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            bottom:4px;
+            left:4px;
+            background:#dc3545;
+            z-index:2;
+        }
+
+        #start{
+            height:100vh;
+            display:flex;
+            justify-content:center;
+            align-items:center;
+            flex-direction:column;
+        }
+
+        #start button{
+            min-height:44px;
+            padding:20px 40px;
+            font-size:14px;
+            border:none;
+            border-radius:12px;
+            background:#007aff;
+            color:#fff;
+        }
+
+        .chips{display:flex;flex-wrap:wrap;gap:6px;}
+        .chip{padding:6px;border-radius:6px;background:#ddd;}
+        .chip.active{background:#007aff;color:#fff;}
+
+        .count{
+            position:absolute;
+            left:50%;
+            top:50%;
+            transform:translate(-50%,-50%);        
+            background:rgba(0,0,0,0.6);
+            color:#fff;
+            font-size:34px;
+            padding:6px 12px;
+            border-radius:10px;
+            z-index:3;
+            pointer-events:none;
+        }
+        
+        .selectedScroll .count{
+            font-size:13px;
+            padding:2px 6px;
+        }
+
+        .deckCount{
+            position:absolute;
+            left:15%;
+            top:30%;
+            transform:translate(-50%,-50%);
+            background:rgba(128,128,128);
+            color:#fff;
+            font-size:22px;
+            padding:3px 9px;
+            border-radius:10px;
+            z-index:3;
+            pointer-events:none;
+        }
+
+        .deckPreview{
+            display:grid;
+            gap:4px;
+            grid-template-columns: 70px 1fr;
+            width:100%;
+            max-width:100%;
+            background:#e5dccb;
+            padding:4px;
+            padding-bottom:4px;
+            box-sizing:border-box;
+            height:auto;
+        }
+
+        .deckScaleWrap{
+            width:100%;
+            transform:none;
+        }
+
+        .leaderArea{
+            width:56px;
+        }
+
+        .leaderArea img{
+            width:100%;
+            height:auto;
+            border-radius:8px;
+        }
+
+        .deckGrid{
+            display:grid;
+            grid-template-columns:repeat(10,1fr);
+            gap:0px 0px;
+            align-content:start;
+            overflow:visible;
+        }
+
+        .deckGrid img{
+            width:100%;
+            aspect-ratio:120/168;
+            object-fit:cover;
+            border-radius:4px;
+        }
+
+        #deckView{
+            position:fixed;
+            inset:0;
+            background:#fff;
+            z-index:10000;
+            display:none;
+            flex-direction:column;
+        }
+
+        #deckView.show{
+            display:flex;
+        }
+
+        .deckViewContent{
+            flex:1;
+            padding: 0 8px 80px;
+            display:flex;
+            flex-direction:column;
+            gap:10px;
+            background:#f5f5f5;
+            overflow:auto;
+            padding-bottom: calc(80px + env(safe-area-inset-bottom));
+        }
+
+        /* デッキ画像 */
+        #deckImage{
+            width:100%;
+            display:block;
+            overflow:visible;
+        }
+
+        /* 名前 */
+        #deckNameInput{
+            font-size:16px;
+            padding:10px;
+        }
+
+        #deckView .card::before{
+            display:none !important;
+        }
+
+        .analysisBox{
+            margin-top:10px;
+            padding:10px;
+            border-radius:10px;
+            background:#f5f5f5;
+            min-height:80px;
+            width:100%;
+            box-sizing:border-box;
+            word-break:break-word;
+        }
+
+        .costChart{
+            min-width:320px;
+        }
+        
+    </style>
+
+    <script src="card_list/card_op01.js"></script>
+    <script src="card_list/card_op02.js"></script>
+    <script src="card_list/card_op03.js"></script>
+    <script src="card_list/card_op04.js"></script>
+    <script src="card_list/card_op05.js"></script>
+    <script src="card_list/card_op06.js"></script>
+    <script src="card_list/card_op07.js"></script>
+    <script src="card_list/card_op08.js"></script>
+    <script src="card_list/card_op09.js"></script>
+    <script src="card_list/card_op10.js"></script>
+    <script src="card_list/card_op11.js"></script>
+    <script src="card_list/card_op12.js"></script>
+    <script src="card_list/card_op13.js"></script>
+    <script src="card_list/card_op14.js"></script>
+    <script src="card_list/card_op15.js"></script>
+    <script src="card_list/card_op16.js"></script>
+    <script src="card_list/card_eb01.js"></script>
+    <script src="card_list/card_eb02.js"></script>
+    <script src="card_list/card_eb03.js"></script>
+    <script src="card_list/card_eb04.js"></script>
+    <script src="card_list/card_prb01.js"></script>
+    <script src="card_list/card_prb02.js"></script>
+    <script src="card_list/card_p.js"></script>
+    <script src="card_list/card_st01.js"></script>
+    <script src="card_list/card_st02.js"></script>
+    <script src="card_list/card_st03.js"></script>
+    <script src="card_list/card_st04.js"></script>
+    <script src="card_list/card_st05.js"></script>
+    <script src="card_list/card_st06.js"></script>
+    <script src="card_list/card_st07.js"></script>
+    <script src="card_list/card_st08.js"></script>
+    <script src="card_list/card_st09.js"></script>
+    <script src="card_list/card_st10.js"></script>
+    <script src="card_list/card_st11.js"></script>
+    <script src="card_list/card_st12.js"></script>
+    <script src="card_list/card_st13.js"></script>
+    <script src="card_list/card_st14.js"></script>
+    <script src="card_list/card_st15.js"></script>
+    <script src="card_list/card_st16.js"></script>
+    <script src="card_list/card_st17.js"></script>
+    <script src="card_list/card_st18.js"></script>
+    <script src="card_list/card_st19.js"></script>
+    <script src="card_list/card_st20.js"></script>
+    <script src="card_list/card_st21.js"></script>
+    <script src="card_list/card_st22.js"></script>
+    <script src="card_list/card_st23.js"></script>
+    <script src="card_list/card_st24.js"></script>
+    <script src="card_list/card_st25.js"></script>
+    <script src="card_list/card_st26.js"></script>
+    <script src="card_list/card_st27.js"></script>
+    <script src="card_list/card_st28.js"></script>
+    <script src="card_list/card_st29.js"></script>
+    <script src="card_list/card_st30.js"></script>
+    <script src="card_list/card_st31.js"></script>
+    <script src="card_list/card_st32.js"></script>
+    <script src="card_list/card_st33.js"></script>
+    <script src="card_list/card_st34.js"></script>
+    <script src="card_list/card_st35.js"></script>
+    <script src="card_list/card_st36.js"></script>
+    <script src="card_list/card_main.js"></script>
+
+</head>
+
+<body>
+
+<!-- START -->
+    <div id="start">
+        <button onclick="initApp()">START</button>
+    </div>
+
+<!-- TOP -->
+    <div id="top" class="hidden">
+        <div style="padding:10px">
+            <h3>デッキ一覧</h3>
+            <div id="list" class="grid"></div>
+        </div>
+
+        <div id="topFooter" class="footer">
+            <button onclick="importDeck()">インポート</button>
+            <button onclick="newData()">新規作成</button>
+            <button onclick="openCardList()">カードリスト</button>
+        </div>
+    </div>
+
+<!-- LEADER -->
+    <div id="leader" class="hidden">
+        <div style="padding:10px">
+            <div id="leaderGrid" class="grid"></div>
+        </div>
+    
+        <div class="footer">
+            <div id="leaderFilters">
+                <div id="leaderColorChips" class="chips"></div>
+                <input id="leaderSearch" placeholder="カード名検索">
+            </div>
+            <button id="leaderFilterBtn" onclick="leaderFilterButton()">絞り込み</button>
+            <button id="setColBtn_leader" onclick="cycleSetCol_leader()">列数:5</button>
+            <button id="topBtn_leader" onclick="show('top')">戻る</button>
+        </div>
+    </div>
+
+<!-- EDIT -->
+    <div id="edit" class="hidden">
+        <div class="selectedWrap">
+            <div id="leaderFixed"></div>
+            <div id="selected" class="selectedScroll"></div>
+        </div>
+
+        <div class="listArea">
+            <div id="grid" class="grid"></div>
+        </div>
+
+        <div class="footer">
+            <button id="menuBtn" onclick="openDeckView()">デッキ</button>
+            <button id="saveBtn" onclick="save()">保存して終了</button>
+            <button id="sortBtn" onclick="sort()">並び替え:発売日↓</button>
+            <button id="setColBtn" onclick="cycleSetCol()">列数:5</button>
+            <button id="searchbtn" onclick="openPopup()">検索</button>
+        </div>
+    </div>
+
+<!-- カードリスト -->
+    <div id="cardList" class="hidden">
+        <div class="listArea">
+            <div id="cardListGrid" class="grid"></div>
+        </div>  
+
+        <div class="footer">
+            <button onclick="show('top')">戻る</button>
+            <button id="sortBtn_list" onclick="sort_list()">並び替え:発売日↓</button>
+            <button id="setColBtn_list" onclick="cycleSetCol_list()">列数:5</button>
+            <button onclick="openPopup_list()">検索</button>
+        </div>
+    </div>
+
+<!-- メニュー -->
+    <div id="deckView">
+        <div class="deckViewContent">
+            <input id="deckNameInput" placeholder="デッキ名">
+            <div id="deckImage"></div>
+            <div id="deckAnalysis" class="analysisBox">
+                <div class="costChart">
+                    <canvas id="costChart"></canvas>
+                </div>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <button onclick="closeDeckView()">編集</button>
+            <button onclick="save()">保存して終了</button>
+        </div>
+    </div>
+    
+<!-- 検索 -->
+    <div id="popup">
+        <h4>レギュレーション</h4><div id="regulationChips" class="chips"></div>
+        <h4>タイプ</h4><div id="typeChips" class="chips"></div>
+        <h4>コスト</h4><div id="costChips" class="chips"></div>
+        <h4>パワー</h4><div id="powerChips" class="chips"></div>
+        <h4>カウンター</h4><div id="counterChips" class="chips"></div>
+        <h4>色</h4><div id="colorChips" class="chips"></div>
+        <h4>カード名</h4><input id="nameSearch" placeholder="カード名">
+        <h4>特徴</h4><input id="featureSearch" placeholder="特徴">
+        <h4>テキスト</h4><input id="textSearch" placeholder="テキスト">
+        <h4>トリガー</h4><input id="triggerSearch" placeholder="トリガー">
+        <button onclick="apply()">適用</button>
+        <button onclick="closePopup()">閉じる</button>
+    </div>
+
+<!-- カードリスト検索 -->
+    <div id="popup_list">
+        <h4>レギュレーション</h4><div id="regulationChips_list" class="chips"></div>
+        <h4>タイプ</h4><div id="typeChips_list" class="chips"></div>
+        <h4>コスト</h4><div id="costChips_list" class="chips"></div>
+        <h4>パワー</h4><div id="powerChips_list" class="chips"></div>
+        <h4>カウンター</h4><div id="counterChips_list" class="chips"></div>
+        <h4>色</h4><div id="colorChips_list" class="chips"></div>
+        <h4>カード名</h4><input id="nameSearch_list" placeholder="カード名">
+        <h4>特徴</h4><input id="featureSearch_list" placeholder="特徴">
+        <h4>テキスト</h4><input id="textSearch_list" placeholder="テキスト">
+        <h4>テキスト</h4><input id="textSearch_list" placeholder="テキスト">
+        <h4>トリガー</h4><input id="triggerSearch_list" placeholder="トリガー">
+        <button onclick="apply_list()">適用</button>
+        <button onclick="closePopup_list()">閉じる</button>
+    </div>
+
+<!-- Viewer -->
+    <div id="viewer">
+        <div id="viewerContent"></div>
+    </div>
+
+<script>
+
+// ===== ローカル保存 =====
+    const STORAGE_KEY = "deckAppData";
+    const imageCache = new Map();
+
+// ===== 色 =====
+    const COLORS = [
+        "赤","青","緑","黄","紫","黒"
+    ];
+
+// ===== 並び順 =====
+    const TYPE_ORDER = {
+        "CHARACTER": 0,
+        "EVENT": 1,
+        "STAGE": 2
+    };
+
+// ===== カードリスト =====
+    const leader_list = CARD_DATA.filter(c => c.type === "LEADER");
+    const card_list = CARD_DATA.filter(c => c.type !== "LEADER");
+
+// ===== 枚数制限突破カード =====
+    const SPECIAL_LIMIT = {
+        "OP01-075": 50,
+        "OP08-072": 50,
+        "OP16-042": 50
+    };
+
+// ===== state =====
+    let counts={};
+    let data=[];
+    let current=null;
+    let name="";
+    let sortMode=0;
+    let regulationFilter=new Set();
+    let colorFilter=new Set();
+    let costFilter=new Set();
+    let powerFilter=new Set();
+    let counterFilter=new Set();
+    let typeFilter=new Set();
+    let textFilter="";
+    let triggerFilter="";
+    let featureFilter="";
+    let nameFilter="";
+    let sortMode_list=0;
+    let regulationFilter_list=new Set();
+    let colorFilter_list=new Set();
+    let costFilter_list=new Set();
+    let powerFilter_list=new Set();
+    let counterFilter_list=new Set();
+    let typeFilter_list=new Set();
+    let textFilter_list="";
+    let triggerFilter_list="";
+    let featureFilter_list="";
+    let nameFilter_list="";
+    let currentList=[];
+    let currentIndex=0;
+    let startX=0;
+    let leader_number = null;
+    let colorFilter_leader=new Set();
+    let nameFilter_leader="";
+    let leaderFilterApplied=false;
+    let gridCols=5;
+    let gridCols_list=5;
+    let gridCols_leader=5;
+    
+// ===== 初期画面 =====
+    function initApp(){
+        show("top");
+    }
+
+    // ===== 読み込み =====
+    async function loadFromHandle(dir){
+        if(!dir) return;
+        data=[];
+        for await(const entry  of dir.values()){
+            if(entry.kind!=="file") continue;
+            if(!entry.name.endsWith(".deck")) continue;
+            const file = await entry.getFile();
+            const text = await file.text();
+            const lines = text.split("\n").filter(l=>l.trim());
+            if(lines.length === 0) continue;
+            const counts = {};
+            let leader_number = null;
+            lines.forEach((line, i)=>{
+                const m = line.match(/(\d+)x(.+)/);
+                if(!m) return;
+                const num = Number(m[1]);
+                const name = m[2];
+                if(i === 0){
+                    leader_number = name;
+                }else{
+                    counts[name] = num;
+                }
+            });
+            
+            if(!leader_number) continue;
+
+            data.push({
+                name: entry.name.replace(".deck",""),
+                counts,
+                leader_number
+            });
+        }
+        renderList();
+    }
+
+// ===== 画面 =====
+    function show(id){
+        ["start","top","leader","edit","cardList"].forEach(x=>{
+            document.getElementById(x).classList.add("hidden")
+        });
+        document.getElementById(id).classList.remove("hidden");
+    }
+
+// ===== 新規 =====
+    function newData(){
+        counts={};
+        current=null;
+        loadleader();
+        show("leader");
+    }
+
+    function importDeck(){
+        const input = document.createElement("input");
+        input.type = "file";
+        input.accept = ".deck";
+
+        input.onchange = async ()=>{
+            const file = input.files[0];
+            if(!file) return;
+
+            const text = await file.text();
+            const lines = text.split("\n").filter(l=>l.trim());
+
+            let counts = {};
+            let leader_number = null;
+
+            lines.forEach((line,i)=>{
+                const m = line.match(/(\d+)x(.+)/);
+                if(!m) return;
+
+                const num = Number(m[1]);
+                const cardName = m[2];
+
+                const card = CARD_DATA.find(c=>c.name === cardName);
+                if(!card) return;
+
+                if(i===0){
+                    leader_number = card.number;
+                }else{
+                    counts[card.number] = num;
+                }
+            });
+
+            if(!leader_number){
+                alert("リーダーが不明");
+                return;
+            }
+
+            data.push({
+                name: "import_" + Date.now(),
+                counts,
+                leader_number
+            });
+
+            saveAll();
+        };
+
+        input.click();
+    }
+
+    function exportDeck(i){
+        const d = data[i];
+
+        let text = "";
+
+        const leader = CARD_DATA.find(c=>c.number===d.leader_number);
+        if(leader){
+            text += `1x${leader.name}\n`;
+        }
+
+        Object.keys(d.counts).forEach(number=>{
+            const card = CARD_DATA.find(c=>c.number===number);
+            if(!card) return;
+
+            text += `${d.counts[number]}x${card.name}\n`;
+        });
+
+        const blob = new Blob([text], {type:"text/plain"});
+        const url = URL.createObjectURL(blob);
+
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = d.name + ".deck";
+        a.click();
+
+        URL.revokeObjectURL(url);
+    }
+
+// ===== リーダー =====
+    function loadleader(){
+        let chipArea = document.getElementById("leaderColorChips");
+        chipArea.innerHTML="";
+        COLORS.forEach(c=>{
+            chipArea.appendChild(makeChip(c, colorFilter_leader,"color","leader"));
+        });
+
+        let g=document.getElementById("leaderGrid");
+        g.innerHTML="";
+        g.style.gridTemplateColumns = `repeat(${gridCols_leader}, 1fr)`;
+
+        let list = [...leader_list];
+
+        // 色
+        if(colorFilter_leader.size){
+            list = list.filter(l => l.color.some(c=>colorFilter_leader.has(c)));
+        }
+
+        // 名前
+        if(nameFilter_leader){
+            list = list.filter(l => l.name.includes(nameFilter_leader));
+        }
+        
+        list.forEach(leader=>{
+            let d=document.createElement("div");
+            d.className="leader";
+            d.style.setProperty("--c1",leader.color);
+            let img=document.createElement("img");
+            
+            img.src = getImg(leader);
+            img.style.width="100%";
+            img.style.height="100%";
+            img.style.objectFit="cover";
+            d.append(img);
+            d.onclick=()=>{
+                const baseName = leader.color.join("") + leader.name;
+                name = generateDeckName(baseName);
+                leader_number = leader.number;
+                const colors = leader.color;
+                colorFilter = new Set(colors);
+                edit();
+                setTimeout(()=>{
+                    openDeckView();
+                },0);
+            };
+            g.appendChild(d);
+        });
+    }
+
+    function leaderFilterButton(){
+        if(leaderFilterApplied){
+            resetLeaderFilter();
+        }else{
+            applyLeaderFilter();
+        }
+    }
+
+    function applyLeaderFilter(){
+        nameFilter_leader = document.getElementById("leaderSearch").value.trim();
+        leaderFilterApplied = hasLeaderFilterCondition();
+        loadleader();
+        updateLeaderFilterButton();
+    }
+
+    function resetLeaderFilter(){
+        colorFilter_leader.clear();
+        nameFilter_leader = "";
+        document.getElementById("leaderSearch").value = "";
+        leaderFilterApplied = false;
+        loadleader();
+        updateLeaderFilterButton();
+    }
+
+    function updateLeaderFilterButton(){
+        const btn = document.getElementById("leaderFilterBtn");
+        btn.textContent = leaderFilterApplied ? "リセット" : "絞り込み";
+    }
+
+    function hasLeaderFilterCondition(){
+        return (
+            colorFilter_leader.size > 0 ||
+            nameFilter_leader.trim() !== ""
+        );
+    }
+
+    
+// ===== カードリスト =====
+    function openCardList(){
+        show("cardList");
+        renderCardList();
+    }
+
+    function renderCardList(){
+        let g=document.getElementById("cardListGrid");
+        g.innerHTML="";
+
+        g.style.gridTemplateColumns = `repeat(${gridCols_list}, 1fr)`;
+
+        let list=[...CARD_DATA]
+
+        // ===== フィルタ =====
+        if(regulationFilter_list.has("スタンダード")){
+            list = list.filter(card =>
+                [2,3,4,5,"X"].includes(card.block)
+            );
+        }
+
+        if(typeFilter_list.size)list=list.filter(i=>typeFilter_list.has(i.type));
+        if(costFilter_list.size)list=list.filter(i=>costFilter_list.has(i.cost));
+        if(powerFilter_list.size)list=list.filter(i=>powerFilter_list.has(i.power));
+        if(counterFilter_list.size)list=list.filter(i=>counterFilter_list.has(i.counter));
+        if(colorFilter_list.size)list=list.filter(i=>i.color.some(c => colorFilter_list.has(c)));
+        if(nameFilter_list)list=list.filter(i=>i.name.includes(nameFilter_list));
+        if(featureFilter_list)list=list.filter(i=>i.feature.includes(featureFilter_list));
+        if(textFilter_list)list=list.filter(i=>i.text.includes(textFilter_list));
+        if(triggerFilter_list)list=list.filter(i=>i.trigger.includes(triggerFilter_list));
+        
+        list=sortList(list);
+
+        list.forEach(card=>{
+            let d=document.createElement("div");
+            d.className="card";
+
+            let img=document.createElement("img");
+            img.src = getImg(card);
+
+            d.appendChild(img);
+
+            // 長押しで拡大だけ
+            cardPress(
+                d,
+                ()=> openViewer(CARD_DATA, CARD_DATA.indexOf(card)),
+                ()=>{}
+            );
+
+            g.appendChild(d);
+        });
+    }
+
+// ===== 編集 =====
+    function edit(){
+        const leader = leader_list.find(c => c.number === leader_number);
+        if(leader){
+            colorFilter = new Set(leader.color);
+        }
+
+        renderLeader();
+
+        let v=document.getElementById("leaderFixed");
+        v.onclick=()=>{
+            loadleader();
+            show("leader");
+        };
+
+        show("edit");
+        render();
+    }
+
+// ===== 描画 =====
+    function render(){
+        renderSelected();
+        renderGrid();
+        renderLeader();
+        saveToLocal();
+    }
+
+    function sortList(list){
+        if(sortMode==1)return list.sort((a,b)=>a.cost-b.cost);
+        if(sortMode==2)return list.sort((a,b)=>b.cost-a.cost);
+        return list;
+    }
+
+    function sort(){
+        sortMode=(sortMode+1)%3;
+        const labels=["発売日↓","コスト↑","コスト↓"];
+        document.getElementById("sortBtn").textContent="並べ替え:"+labels[sortMode];
+        render();
+    }
+
+    function sort_list(){
+        sortMode_list=(sortMode_list+1)%3;
+        const labels=["発売日↓","コスト↑","コスト↓"];
+        document.getElementById("sortBtn_list").textContent="並べ替え:"+labels[sortMode_list];
+        renderCardList();
+    }
+
+    function sortSelected(list){
+        return list.sort((a,b)=>{
+            // type順
+            const t1 = TYPE_ORDER[a.type] ?? 99;
+            const t2 = TYPE_ORDER[b.type] ?? 99;
+            if(t1 !== t2) return t1 - t2;
+            // cost昇順
+            if(a.cost !== b.cost) return a.cost - b.cost;
+            // 同コストならパワー（お好み）
+            return a.power - b.power;
+        });
+    }
+    
+    function renderLeader(){
+        const v = document.getElementById("leaderFixed");
+        v.innerHTML = "";
+
+        if(!leader_number) return;
+
+        const card = leader_list.find(c => c.number === leader_number);
+        if(!card) return;
+        
+        const img = document.createElement("img");
+        img.src = getImg(card);
+
+        v.appendChild(img);
+
+        const count = document.createElement("div");
+        count.id = "deckCount";
+        count.className = "deckCount";
+        
+        v.appendChild(count);
+        updateDeckCount();
+    }
+
+    function renderSelected(){
+        let g=document.getElementById("selected");
+        g.innerHTML="";
+
+        let list = Object.keys(counts).map(number=>{
+            let card = card_list.find(c => c.number === number);
+            if(!card) return null;
+            return card;
+        }).filter(Boolean);
+
+        list = sortSelected(list);
+
+        list.forEach(card=>{
+            let d = createCardElement(card,"selected");
+            cardPress(
+                d,
+                ()=> add(card.number),
+                ()=> remove(card.number)
+            );
+            g.appendChild(d);
+        });
+    }
+
+    function renderGrid(){
+        let g=document.getElementById("grid");
+        g.innerHTML="";
+
+        g.style.gridTemplateColumns = `repeat(${gridCols}, 1fr)`;
+
+        let list=[...card_list];
+
+        // ===== フィルタ =====
+        if(regulationFilter.has("スタンダード")){
+            list = list.filter(card =>
+                [2,3,4,5,"X"].includes(card.block)
+            );
+        }
+        if(typeFilter.size)list=list.filter(i=>typeFilter.has(i.type));
+        if(costFilter.size)list=list.filter(i=>costFilter.has(i.cost));
+        if(powerFilter.size)list=list.filter(i=>powerFilter.has(i.power));
+        if(counterFilter.size)list=list.filter(i=>counterFilter.has(i.counter));
+        if(colorFilter.size)list=list.filter(i=>i.color.some(c => colorFilter.has(c)));
+        if(nameFilter)list=list.filter(i=>i.name.includes(nameFilter));
+        if(featureFilter)list=list.filter(i=>i.feature.includes(featureFilter));
+        if(textFilter)list=list.filter(i=>i.text.includes(textFilter));
+        if(triggerFilter)list=list.filter(i=>i.trigger.includes(triggerFilter));
+
+        list=sortList(list);
+        list.forEach((card,i)=>{
+            let d = createCardElement(card,"list");
+            cardPress(
+                d,
+                ()=> openViewer(list,i),
+                ()=> add(card.number)
+            );
+            g.appendChild(d);
+        });
+    }
+
+// ===== 操作 =====
+    let pressTimer;
+
+    function cardPress(el, onLongPress, onClick){
+        let pressTimer;
+        let startX = 0;
+        let startY = 0;
+        let moved = false;
+        let longPressFired = false;
+
+    // ===== スマホ =====
+        el.addEventListener("touchstart", (e)=>{
+            moved = false;
+            startX = e.touches[0].clientX;
+            startY = e.touches[0].clientY;
+            pressTimer = setTimeout(()=>{
+                if(!moved){
+                    onLongPress();
+                }
+            }, 700);
+        });
+
+        el.addEventListener("touchmove", (e)=>{
+            let dx = Math.abs(e.touches[0].clientX - startX);
+            let dy = Math.abs(e.touches[0].clientY - startY);
+            if(dx > 10 || dy > 10){
+                moved = true;
+                clearTimeout(pressTimer);
+            }
+        });
+
+        el.addEventListener("touchend", ()=>{
+            clearTimeout(pressTimer);
+        });
+        
+        // ===== PC =====
+        el.addEventListener("mousedown", ()=>{
+            pressTimer = setTimeout(onLongPress, 700);
+        });
+        el.addEventListener("mouseup", ()=>{
+            clearTimeout(pressTimer);
+        });
+        el.addEventListener("mouseleave", ()=>{
+            clearTimeout(pressTimer);
+        });
+
+        // ===== 通常クリック =====
+        el.addEventListener("click", (e)=>{
+            onClick(e);
+        });
+    }
+
+    function add(n){
+        const card = card_list.find(c => c.number === n);
+        if(!card) return;
+        const max = SPECIAL_LIMIT[card.number] || 4;
+        if((counts[n]||0)>=max)return;
+        counts[n]=(counts[n]||0)+1;
+        render();
+        if(document.getElementById("viewer").classList.contains("show")){
+            renderViewer();
+        }
+    }
+
+    function remove(n){
+        if(!counts[n]) return;
+        counts[n]--;
+        if(counts[n]<=0)delete counts[n];
+        render();
+        if(document.getElementById("viewer").classList.contains("show")){
+            renderViewer();
+        }
+    }
+
+// ===== 拡大 =====
+    function openViewer(list,index){
+        currentList=list;
+        currentIndex=index;
+        document.getElementById("viewer").classList.add("show");
+        renderViewer();
+    }
+
+    function renderViewer(){
+        let v=document.getElementById("viewerContent");
+        v.innerHTML="";
+
+        let wrap=document.createElement("div");
+        wrap.className="viewerWrap";
+
+        let card = currentList[currentIndex];
+
+        // ===== カード =====
+        let cardEl = createCardElement(card,"viewer");
+
+        // ===== ボタン =====
+        let prevBtn=document.createElement("button");
+        prevBtn.className="navBtn prev";
+        prevBtn.textContent="‹";
+        prevBtn.onclick=(e)=>{e.stopPropagation();if(currentIndex>0){currentIndex--;renderViewer();}};
+
+        let nextBtn=document.createElement("button");
+        nextBtn.className="navBtn next";
+        nextBtn.textContent="›";
+        nextBtn.onclick=(e)=>{e.stopPropagation();if(currentIndex<currentList.length-1){currentIndex++;renderViewer();}};
+
+        let closeBtn=document.createElement("button");
+        closeBtn.className="closeBtn";
+        closeBtn.textContent="×";
+        closeBtn.onclick=(e)=>{e.stopPropagation();closeViewer();};
+
+        wrap.append(cardEl, prevBtn, nextBtn, closeBtn);
+        v.appendChild(wrap);
+    }
+
+    function closeViewer(){
+        document.getElementById("viewer").classList.remove("show");
+        currentList=[];
+        currentIndex=0;
+    }
+
+    document.getElementById("viewer").onclick=closeViewer;
+
+
+// ===== 拡大時のスワイプ =====
+    const viewer=document.getElementById("viewer");
+    viewer.addEventListener("touchstart",(e)=>{
+        startX=e.touches[0].clientX;
+    });
+
+    viewer.addEventListener("touchend",(e)=>{
+        let dx=e.changedTouches[0].clientX-startX;
+        if(dx>50) currentIndex--;
+        if(dx<-50) currentIndex++;
+        if(currentIndex<0) currentIndex=0;
+        if(currentIndex>=currentList.length) currentIndex=currentList.length-1;
+        renderViewer();
+    });
+
+// ===== メニュー =====
+    function openDeckView(){
+        const view = document.getElementById("deckView");
+        const area = document.getElementById("deckImage");
+        const input = document.getElementById("deckNameInput");
+
+        area.innerHTML = "";
+
+        const wrap = document.createElement("div");
+        wrap.className = "deckPreview";
+
+        // ===== リーダー =====
+        const leaderDiv = document.createElement("div");
+        leaderDiv.className = "leaderArea";
+
+        if(leader_number){
+            const leader = CARD_DATA.find(c=>c.number===leader_number);
+            if(leader){
+                const img = document.createElement("img");
+                img.src = getImg(leader);
+                img.style.width = "100%";
+                leaderDiv.appendChild(img);
+            }
+        }
+
+        // ===== デッキ =====
+        const grid = document.createElement("div");
+        grid.className = "deckGrid";
+
+        const cards = [];
+        Object.keys(counts).forEach(number=>{
+            let card = card_list.find(c=>c.number===number);
+            if(!card) return;
+        
+            for(let i=0;i<counts[number];i++){
+                cards.push(card);
+            }
+        });
+
+        cards.sort((a,b)=>{
+            const typeOrder = ["CHARACTER","EVENT","STAGE"];
+            if(typeOrder.indexOf(a.type) !== typeOrder.indexOf(b.type)){
+                return typeOrder.indexOf(a.type) - typeOrder.indexOf(b.type);
+            }
+            return a.cost - b.cost;
+        });
+
+        cards.forEach(card=>{
+            let img = document.createElement("img");
+            img.src = getImg(card);
+            grid.appendChild(img);
+        });
+
+        wrap.appendChild(leaderDiv);
+        wrap.appendChild(grid);
+        area.appendChild(wrap);
+
+        input.value = name || "";
+        view.classList.add("show");
+
+        renderAnalysis();
+    }
+
+    function closeDeckView(){
+        document.getElementById("deckView").classList.remove("show");
+    }
+
+    function generateDeckName(base){
+        if(!Array.isArray(data)) return base;
+
+        let names = data.map(d=>d.name);
+
+        if(!names.includes(base)) return base;
+
+        let i = 1;
+        while(names.includes(base + "_" + i)){
+            i++;
+        }
+        return base + "_" + i;
+    }
+
+    function save(){
+        const input = document.getElementById("deckNameInput");
+        if(input)name = input.value;
+
+        if(current==null){
+            data.push({
+                name,
+                counts,
+                leader_number
+            });
+        }else{
+            data[current] = {
+                name,
+                counts,
+                leader_number
+            };
+        }
+
+        localStorage.setItem("deckAppData", JSON.stringify(data));
+
+        renderList();
+        closeDeckView();
+        show("top");
+    }
+
+// ===== TOP =====
+    function renderList(){
+        let g=document.getElementById("list");
+        g.innerHTML="";
+
+        g.style.gridTemplateColumns = `repeat(${gridCols_list}, 1fr)`;
+
+        data.forEach((d,i)=>{
+            let c=document.createElement("div");
+            c.className="deck";
+
+            const leader = CARD_DATA.find(x => x.number === d.leader_number);
+
+            // ===== 左：画像 =====
+            let img = document.createElement("img");
+            img.src = getImg(leader);
+            img.className = "deckLeader";
+
+            // ===== 中央：名前 =====
+            let nameEl = document.createElement("div");
+            nameEl.className = "deckName";
+            nameEl.textContent = d.name;
+
+            // ===== 右：ボタン =====
+            let btnArea = document.createElement("div");
+            btnArea.className = "deckButtons";
+
+            // コピー
+            let copyBtn = document.createElement("button");
+            copyBtn.textContent = "コピー";
+            copyBtn.onclick = (e)=>{
+                e.stopPropagation();
+                duplicateDeck(i);
+            };
+
+            // エクスポート
+            let exportBtn = document.createElement("button");
+            exportBtn.textContent = "Export";
+            exportBtn.onclick = (e)=>{
+                e.stopPropagation();
+                exportDeck(i);
+            };
+
+            // 削除
+            let delBtn = document.createElement("button");
+            delBtn.textContent = "削除";
+            delBtn.className = "danger";
+            delBtn.onclick = (e)=>{
+                e.stopPropagation();
+                deleteDeck(i);
+            };
+
+            btnArea.append(exportBtn, copyBtn, delBtn);
+
+            // ===== 色枠 =====
+            if(leader && leader.color){
+                if(leader.color.length === 1){
+                    c.style.borderLeft = `6px solid ${getColorCode(leader.color[0])}`;
+                }else{
+                    c.style.borderLeft = `6px solid`;
+                    c.style.borderImage = `
+                        linear-gradient(to bottom,
+                            ${getColorCode(leader.color[0])},
+                            ${getColorCode(leader.color[1])}
+                        ) 1
+                    `;
+                }
+            }
+
+            const right = document.createElement("div");
+            right.className = "deckRight";
+            right.appendChild(nameEl);
+            right.appendChild(btnArea);
+            c.append(img, right);
+
+            c.onclick=()=>{
+                openDeckFromList(i);
+            };
+
+            g.appendChild(c);
+        });
+    }
+
+    function openDeckFromList(i){
+        const d = data[i];
+
+        counts = {...d.counts};
+        leader_number = d.leader_number;
+        name = d.name;
+        current = i;
+        edit();
+        openDeckView();
+    }
+
+    function deleteDeck(i){
+        const ok = confirm("本当に削除しますか？");
+
+        if(!ok) return;
+
+        data.splice(i,1);
+        saveAll();
+    }
+
+    function editDeck(i){
+        counts={...data[i].counts};
+        leader_number = data[i].leader_number;
+        name=data[i].name;
+        current=i;
+        edit();
+    }
+
+    function duplicateDeck(i){
+        const d = data[i];
+
+        data.push({
+            name: d.name + "_copy",
+            counts: {...d.counts},
+            leader_number: d.leader_number
+        });
+
+        saveAll();
+    }
+
+    function saveAll(){
+        localStorage.setItem("deckAppData", JSON.stringify(data));
+        renderList();
+    }
+
+    function getColorCode(color){
+        const map = {
+            "赤":"#e74c3c",
+            "青":"#3498db",
+            "緑":"#27ae60",
+            "黄":"#f1c40f",
+            "紫":"#8e44ad",
+            "黒":"#2c3e50"
+        };
+        return map[color] || "#999";
+    }
+
+    function analyzeDeck(){
+        const result = {
+            counter:{0:0,1000:0,2000:0},
+            features:{},
+            cost:{},
+            colors:{}
+        };
+
+        Object.keys(counts).forEach(number=>{
+            const card = card_list.find(c=>c.number===number);
+            if(!card) return;
+
+            const num = counts[number];
+
+            // ===== カウンター =====
+            if(result.counter[card.counter] != null){
+                result.counter[card.counter] += num;
+            }
+
+            // ===== 特徴 =====
+            if(card.feature){
+                const arr = card.feature.split("/");
+                arr.forEach(f=>{
+                    f = f.trim();
+                    if(!f) return;
+                    result.features[f] = (result.features[f]||0) + num;
+                });
+            }
+
+            // ===== コスト =====
+            result.cost[card.cost] = (result.cost[card.cost]||0) + num;
+
+            // ===== 色 =====
+            card.color.forEach(c=>{
+                result.colors[c] = (result.colors[c]||0) + num;
+            });
+        });
+
+        return result;
+    }
+
+    function renderAnalysis(){
+        const box = document.getElementById("deckAnalysis");
+        const a = analyzeDeck();
+
+        // ===== カウンター =====
+        let counterHTML = `
+            <h4>カウンター</h4>
+            0: ${a.counter[0] || 0}枚<br>
+            1000: ${a.counter[1000] || 0}枚<br>
+            2000: ${a.counter[2000] || 0}枚
+        `;
+
+        // ===== 特徴 =====
+        let featureHTML = `<h4>特徴</h4>`;
+        Object.entries(a.features)
+            .sort((a,b)=>b[1]-a[1])
+            .forEach(([k,v])=>{
+                featureHTML += `${k}: ${v}枚<br>`;
+            });
+
+        // ===== コスト =====
+        const max = Math.max(...Object.values(a.cost), 1);
+        let costHTML = `<h4>コスト分布</h4>`;
+        for(let i=0;i<=10;i++){
+            const v = a.cost[i] || 0;
+            const ratio = (v / 50) * 90;
+
+            costHTML += `
+                <div style="display:flex;align-items:center;">
+                    <div style="width:30px">${i}</div>
+                    <div style="background:#007aff;height:8px;width:${ratio}%"></div>
+                    <div style="margin-left:6px">${v}</div>
+                </div>
+            `;
+        }
+
+        box.innerHTML =
+            counterHTML +
+            featureHTML +
+            costHTML +
+            `<div style="height:80px"></div>`;
+    }
+
+// ===== 列変更 =====
+    function cycleSetCol(){
+        gridCols--;
+        if(gridCols < 1) gridCols = 5;
+
+        document.getElementById("setColBtn").textContent = `列数:${gridCols}`;
+
+        renderGrid();
+    }
+
+    function cycleSetCol_list(){
+        gridCols_list--;
+        if(gridCols_list < 1) gridCols_list = 5;
+
+        document.getElementById("setColBtn_list").textContent = `列数:${gridCols_list}`;
+
+        renderCardList();
+    }
+
+    function cycleSetCol_leader(){
+        gridCols_leader--;
+        if(gridCols_leader < 1) gridCols_leader = 5;
+
+        document.getElementById("setColBtn_leader").textContent = `列数:${gridCols_leader}`;
+
+        loadleader();
+    }
+
+// ===== 検索 =====
+    function makeChip(val,set,type,mode="edit"){
+        let d=document.createElement("div");
+        let isAllowed = true;
+
+        if(type === "color" && mode === "edit"){
+            const leader = leader_list.find(c => c.number === leader_number);
+            isAllowed = !leader || leader.color.includes(val);
+        }
+
+        d.className="chip"+(set.has(val)?" active":"");
+
+        if(!isAllowed){
+            d.style.opacity = "0.3";
+            d.style.pointerEvents = "none";
+        }
+
+        d.textContent=val;
+
+        d.onclick=()=>{
+            set.has(val)?set.delete(val):set.add(val);
+            d.classList.toggle("active");
+        };
+
+        return d;
+    }
+
+    function openPopup(){
+        document.getElementById("popup").classList.add("show");
+
+        let regulationArea=document.getElementById("regulationChips");
+        regulationArea.innerHTML="";
+        regulationArea.appendChild(makeChip("スタンダード", regulationFilter,"regulation","edit"));
+        
+        let typeArea = document.getElementById("typeChips");
+        typeArea.innerHTML = "";
+        ["CHARACTER","EVENT","STAGE"].forEach(t=>{
+            typeArea.appendChild(makeChip(t, typeFilter,"type","edit"));
+        });
+
+        let costArea=document.getElementById("costChips");
+        costArea.innerHTML="";
+        for(let i=0;i<=10;i++){
+            costArea.appendChild(makeChip(i,costFilter,"cost","edit"));
+        }
+        
+        let powerArea=document.getElementById("powerChips");
+        powerArea.innerHTML="";
+        for(let i=0;i<=13;i++){
+            powerArea.appendChild(makeChip(i*1000,powerFilter,"power","edit"));
+        }
+        
+        let counterArea=document.getElementById("counterChips");
+        counterArea.innerHTML="";
+        for(let i=0;i<=2;i++){
+            counterArea.appendChild(makeChip(i*1000,counterFilter,"counter","edit"));
+        }
+
+        let colorArea=document.getElementById("colorChips");
+        colorArea.innerHTML="";
+        COLORS.forEach(cn=>{
+           colorArea.appendChild(makeChip(cn,colorFilter,"color","edit"));
+        });
+        
+        document.getElementById("nameSearch").value=nameFilter;
+        document.getElementById("featureSearch").value=featureFilter;
+        document.getElementById("textSearch").value=textFilter;
+        document.getElementById("triggerSearch").value=triggerFilter;
+    }
+
+    
+    function openPopup_list(){
+        document.getElementById("popup_list").classList.add("show"); 
+        
+        let regulationArea=document.getElementById("regulationChips_list");
+        regulationArea.innerHTML="";
+        regulationArea.appendChild(makeChip("スタンダード", regulationFilter_list,"regulation","edit"));
+        
+        let typeArea = document.getElementById("typeChips_list");
+        typeArea.innerHTML = "";
+        ["CHARACTER","EVENT","STAGE","LEADER"].forEach(t=>{
+            typeArea.appendChild(makeChip(t, typeFilter_list,"type","list"));
+        });
+
+        let costArea=document.getElementById("costChips_list");
+        costArea.innerHTML="";
+        for(let i=0;i<=10;i++){
+            costArea.appendChild(makeChip(i,costFilter_list,"cost","list"));
+        }
+
+        let powerArea=document.getElementById("powerChips_list");
+        powerArea.innerHTML="";
+        for(let i=0;i<=13;i++){
+            powerArea.appendChild(makeChip(i*1000,powerFilter_list,"power","list"));
+        }
+        
+        let counterArea=document.getElementById("counterChips_list");
+        counterArea.innerHTML="";
+        for(let i=0;i<=2;i++){
+            counterArea.appendChild(makeChip(i*1000,counterFilter_list,"counter","list"));
+        }
+
+        let colorArea=document.getElementById("colorChips_list");
+        colorArea.innerHTML="";
+        COLORS.forEach(cn=>{
+           colorArea.appendChild(makeChip(cn,colorFilter_list,"color","list"));
+        });
+        
+        document.getElementById("textSearch_list").value=textFilter_list;
+        document.getElementById("featureSearch_list").value=featureFilter_list;
+        document.getElementById("nameSearch_list").value=nameFilter_list;
+        document.getElementById("triggerSearch_list").value=triggerFilter_list;
+    }
+
+    function apply(){
+        nameFilter=document.getElementById("nameSearch").value;
+        featureFilter=document.getElementById("featureSearch").value;
+        textFilter=document.getElementById("textSearch").value;
+        triggerFilter=document.getElementById("triggerSearch").value;
+        closePopup();
+        renderGrid();
+    }
+
+    function apply_list(){
+        nameFilter_list=document.getElementById("nameSearch_list").value;
+        featureFilter_list=document.getElementById("featureSearch_list").value;
+        textFilter_list=document.getElementById("textSearch_list").value;
+        triggerFilter_list=document.getElementById("triggerSearch_list").value;
+        closePopup_list();
+        renderCardList();
+    }
+
+    function closePopup(){
+        document.getElementById("popup").classList.remove("show");
+    }
+
+    function closePopup_list(){
+        document.getElementById("popup_list").classList.remove("show");
+    }
+
+// ===== Card 作成 =====
+    function createCardElement(card,mode){
+        let d = document.createElement("div");
+        d.className = "card";
+
+        let img = document.createElement("img");
+        img.src = card.img;
+
+        img.onerror = ()=>{
+            img.src="";
+            d.innerHTML += `<div class="noimg">No Image</div>`;
+        };
+
+        d.appendChild(img);
+
+        //枚数表示（0/4）
+        let count = counts[card.number] || 0;
+        const total = getTotalCount();
+
+        // ===== 選択済み or viewerだけUI表示 =====
+        if(mode === "viewer"){
+            const max = SPECIAL_LIMIT[card.number] || 4;
+            let c = document.createElement("div");
+            c.className = "count";
+            c.textContent = count + "/" + max;
+            d.appendChild(c);
+
+            let addBtn = document.createElement("button");
+            addBtn.className = "addBtn";
+            addBtn.textContent = "+";
+            addBtn.onclick = (e)=>{
+                e.stopPropagation();
+                add(card.number);
+            };
+
+            let removeBtn = document.createElement("button");
+            removeBtn.className = "removeBtn";
+            removeBtn.textContent = "-";
+            removeBtn.onclick = (e)=>{
+                e.stopPropagation();
+                remove(card.number);
+            };
+
+            d.append(addBtn, removeBtn);
+        }
+        if(mode === "selected"){
+            const max = SPECIAL_LIMIT[card.number] || 4;
+            let c = document.createElement("div");
+            c.className = "count";
+            c.textContent = count + "/" + max;
+            d.appendChild(c);
+        }
+        return d;
+    }
+
+    function getTotalCount(){
+            return Object.values(counts).reduce((a,b)=>a+b,0);
+    }
+    
+    function updateDeckCount(){
+        const total = getTotalCount();
+        const max = 50;
+
+        const el = document.getElementById("deckCount");
+        if(!el) return;
+        el.textContent = `${total} / ${max}`;
+
+        if(total !== max){
+            el.style.color = "#ff4d4f";      // 赤
+        }else{
+            el.style.color = "#ffffff";      // 白
+        }
+    }
+
+// ===== PWA =====
+    function saveToLocal(){
+        const payload = {
+            data,
+            counts,
+            name,
+            leader_number
+        };
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+    }
+
+    function loadFromLocal(){
+        const raw = localStorage.getItem("deckAppData");
+        if(!raw) return;
+
+        try{
+            const parsed = JSON.parse(raw);
+            if(Array.isArray(parsed)){
+                data = parsed;
+            }else{
+                data = parsed.data || [];
+            }
+
+        }catch(e){
+            console.warn("load error", e);
+            data = [];
+        }
+    }
+
+    function getImg(card){
+        if(!card || !card.img) return "";
+
+        let path = card.img;
+
+        if(path.startsWith("/")){
+            path = path.slice(1);
+        }
+
+        return path;
+    }
+
+// ===== 初期化 =====
+    loadFromLocal();
+    renderList();
+
+</script>
+</body>
+</html>
+
